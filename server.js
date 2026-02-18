@@ -1,14 +1,13 @@
 const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');  
-
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(express.json());
 
 const db = mysql.createConnection({
-  host: 'localhost',
+  host: '127.0.0.1', 
   user: 'root',
   password: 'turaab2011',
   database: 'testdb'
@@ -16,10 +15,24 @@ const db = mysql.createConnection({
 
 db.connect(err => {
   if(err) console.log('DB connection error:', err);
-  else console.log('Connected to data base ab chala ja');
+  else console.log('Connected to database! Ab chala ja kaam kar.');
 });
 
-// REGISTER
+
+app.get('/', (req, res) => {
+  res.send('<h1>Server is running!</h1><p>Use Postman to test /register and /login.</p>');
+});
+
+app.get('/login', (req, res) => {
+  res.send('hogia dk bhao no tension');
+});
+
+app.get('/register', (req, res) => {
+  res.send('jeo hogia theek dk bhai no tension.');
+});
+// -------------------------------------------------------
+
+// REGISTER (POST)
 app.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
   const hashpassword = await bcrypt.hash(password, 10);
@@ -36,7 +49,7 @@ app.post('/register', async (req, res) => {
   });
 });
 
-// LOGIN
+// LOGIN (POST)
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const query = 'SELECT * FROM users WHERE email = ?';
@@ -48,15 +61,14 @@ app.post('/login', async (req, res) => {
     const user = result[0];
     const isMatch = await bcrypt.compare(password, user.password);
     if(!isMatch) return res.status(401).json({ message: 'galat hai bhai' });
-    // jwt wali cheez
 
-    const token=jwt.sign(
-      {id :user.id ,email:user.email},
-    'my_jwt_secret',
-    {expiresIn:'2h'}
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      'my_jwt_secret',
+      { expiresIn: '2h' }
     );
 
-    res.status(200).json({ message: 'hogia bhai',token });
+    res.status(200).json({ message: 'hogia bhai', token });
   });
 });
 
