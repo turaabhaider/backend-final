@@ -2,23 +2,34 @@ const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+require('dotenv').config(); // Essential for loading Railway variables
 
 const app = express();
 app.use(express.json());
 
-const db = mysql.createConnection({
-  host: '127.0.0.1', 
-  user: 'root',
-  password: 'turaab2011',
-  database: 'testdb'
+
+const db = mysql.createPool({
+  host: process.env.MYSQLHOST || '127.0.0.1', 
+  user: process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQLPASSWORD || 'turaab2011',
+  database: process.env.MYSQLDATABASE || 'testdb',
+  port: process.env.MYSQLPORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect(err => {
-  if(err) console.log('DB connection error:', err);
-  else console.log('Connected to database! Ab chala ja kaam kar.');
+
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error('DB connection error:', err.message);
+  } else {
+    console.log('Connected to database! Ab chala ja kaam kar.');
+    connection.release();
+  }
 });
 
-
+// ROUTES
 app.get('/', (req, res) => {
   res.send('<h1>Server is running!</h1><p>Use Postman to test /register and /login.</p>');
 });
@@ -30,7 +41,6 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
   res.send('jeo hogia theek dk bhai no tension.');
 });
-// -------------------------------------------------------
 
 // REGISTER (POST)
 app.post('/register', async (req, res) => {
@@ -72,6 +82,8 @@ app.post('/login', async (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
